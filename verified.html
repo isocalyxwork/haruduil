@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>하루두일 이메일 인증</title>
+<style>
+  :root { --bg:#f3f3f4; --card:#ffffff; --ink:#242428; --soft:#6a6970; --point:#7d8db6; --btn:#2a2a30; --onbtn:#fff; --err:#e0526a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#11161a; --card:#1b1d22; --ink:#f2f2f4; --soft:#b0afb7; --point:#b6c0dc; --btn:#f2f2f4; --onbtn:#15171b; } }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--ink);
+         font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif; padding:16px; }
+  .card { width:100%; max-width:420px; background:var(--card); border-radius:26px; padding:32px 24px 26px; text-align:center; border-top:3px solid var(--point); }
+  img { width:88px; height:88px; border-radius:22px; }
+  h1 { font-size:20px; margin:18px 0 8px; line-height:1.4; }
+  p { color:var(--soft); font-size:14.5px; line-height:1.65; margin:0; }
+  .btn { display:block; margin-top:22px; background:var(--btn); color:var(--onbtn); text-decoration:none; font-weight:700; padding:15px; border-radius:16px; }
+  .small { font-size:12.5px; margin-top:14px; }
+  .hidden { display:none; }
+  .err h1 { color:var(--err); }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <img src="icon.png" alt="하루두일">
+  <!-- 휴대폰(안드로이드) -->
+  <div id="mobile" class="hidden">
+    <h1>이메일 인증이 완료됐어요!</h1>
+    <p>하루두일 앱을 여는 중이에요.<br>앱이 자동으로 열리지 않으면 아래 버튼을 눌러 주세요.</p>
+    <a class="btn" id="open" href="#">하루두일 앱 열기</a>
+    <p class="small">앱이 열리지 않아도 인증은 완료됐어요. 앱에서 이메일과 비밀번호로 로그인하면 돼요.</p>
+  </div>
+  <!-- 컴퓨터·아이폰 등 -->
+  <div id="desktop" class="hidden">
+    <h1>이메일 인증이 완료됐어요!</h1>
+    <p>이제 휴대폰의 하루두일 앱에서<br>이메일과 비밀번호로 로그인해 주세요.</p>
+  </div>
+  <!-- 링크 만료·오류 -->
+  <div id="error" class="hidden err">
+    <h1>링크가 만료됐거나 이미 사용됐어요</h1>
+    <p>이미 인증을 마쳤다면 앱에서 바로 로그인하면 돼요.<br>아직이라면 앱의 로그인 화면에서 "인증 메일 다시 보내기"를 눌러 주세요.</p>
+  </div>
+</div>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var h = new URLSearchParams(location.hash.replace(/^#/, ''));
+  var hasError = q.get('error') || h.get('error') || q.get('error_code') || h.get('error_code');
+  var code = q.get('code');
+  function show(id) { document.getElementById(id).classList.remove('hidden'); }
+
+  if (hasError) { show('error'); return; }
+
+  var isAndroid = /Android/i.test(navigator.userAgent);
+  if (!isAndroid) { show('desktop'); return; }
+
+  // 안드로이드: 하루두일 앱으로 넘겨서 로그인(또는 새 비밀번호 화면)까지 이어 가요.
+  var query = code ? ('?code=' + encodeURIComponent(code)) : '';
+  var intentUrl = 'intent://login-callback' + query +
+      '#Intent;scheme=com.dwd.haruduil;package=com.dwd.haruduil;end';
+  var schemeUrl = 'com.dwd.haruduil://login-callback' + query;
+  var btn = document.getElementById('open');
+  btn.href = intentUrl;
+  btn.addEventListener('click', function () {
+    setTimeout(function () { location.href = schemeUrl; }, 800);
+  });
+  show('mobile');
+  if (code) { location.href = intentUrl; }
+})();
+</script>
+</body>
+</html>
